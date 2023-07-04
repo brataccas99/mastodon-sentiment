@@ -1,1 +1,1 @@
-# mastodon-sentiment
+# mastodon-sentiment-analysis
