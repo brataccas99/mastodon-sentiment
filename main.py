@@ -1,3 +1,5 @@
+import re
+import csv
 import nltk
 from bs4 import BeautifulSoup
 from mastodon import Mastodon
@@ -20,6 +22,9 @@ timeline = mastodon.timeline_home()
 # Create an instance of the SentimentIntensityAnalyzer class
 analyzer = SentimentIntensityAnalyzer()
 
+# Create a list to store the data for CSV
+csv_data = []
+
 # Loop through the timeline statuses
 for status in timeline:
     content = status['content']
@@ -29,6 +34,12 @@ for status in timeline:
     # Use BeautifulSoup to remove HTML tags from content
     soup = BeautifulSoup(content, 'html.parser')
     filtered_content = soup.get_text()
+
+    # Remove URLs from filtered_content
+    filtered_content = re.sub(r'http\S+|www\S+', '', filtered_content)
+
+    # Remove only #
+    filtered_content = re.sub(r'#', '', filtered_content)
 
     # Perform sentiment analysis on the filtered content
     sentiment_scores = analyzer.polarity_scores(filtered_content)
@@ -42,8 +53,16 @@ for status in timeline:
     else:
         sentiment_label = 'Neutral'
 
+    # Add the data to csv_data as a list
+    csv_data.append([filtered_content, sentiment_label])
+
     # Print the post information and sentiment analysis result
-    print(f"Author: {author}")
     print(f"Content: {filtered_content}")
     print(f"Sentiment: {sentiment_label} ({sentiment_score})")
     print("---")
+
+# Generate csv
+with open('dataset.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(['Content', 'Sentiment'])  # Write the column headers
+    writer.writerows(csv_data)
